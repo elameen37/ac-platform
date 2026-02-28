@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-pitch-black: #0A0A0A;
+  --color-emerald-icpc: #008450;
+  --color-authority-gold: #D4AF37;
+  --color-restricted-red: #B22222;
 
-@theme inline {
+  --font-sans: "Inter", "Public Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-sharp: 4px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-border: var(--border);
+  --color-glass: var(--glass);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #FFFFFF;
+  --foreground: #1A1A1A;
+  --border: rgba(0, 0, 0, 0.1);
+  --glass: rgba(0, 0, 0, 0.02);
+  --sidebar-bg: #F8F9FA;
+}
+
+[data-theme='dark'] {
+  --background: #0A0A0A;
+  --foreground: #F8F8F8;
+  --border: rgba(255, 255, 255, 0.1);
+  --glass: rgba(255, 255, 255, 0.03);
+  --sidebar-bg: #0A0A0A;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Utilities */
+@utility glass-effect {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+@utility emerald-glow {
+  box-shadow: 0 0 15px rgba(0, 132, 80, 0.15);
+}
+
+@utility gold-border {
+  border-left: 3px solid var(--color-authority-gold);
+}
+
+/* Layout Utilities */
+.sidebar-surface {
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+
+.header-surface {
+  background-color: var(--glass);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Document Tagging */
+.security-tag {
+  @apply text-[10px] font-mono px-2 py-0.5 uppercase tracking-widest border font-bold;
+}
+
+.tag-secret {
+  @apply border-restricted-red text-restricted-red bg-restricted-red/10;
+}
+
+.tag-restricted {
+  @apply border-authority-gold text-authority-gold bg-authority-gold/10;
+}
+
+.tag-public {
+  @apply border-emerald-icpc text-emerald-icpc bg-emerald-icpc/10;
+}
+
+/* Interactive elements */
+.nav-item-active {
+  @apply bg-emerald-icpc/10 text-emerald-icpc;
+  border-left: 3px solid var(--color-authority-gold);
+}
+
+.nav-item-hover {
+  @apply text-foreground/60 hover:text-foreground hover:bg-foreground/5;
 }
