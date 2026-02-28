@@ -17,7 +17,8 @@ import { cn } from '@/lib/utils';
 const contacts = [
     { id: 1, name: 'Director Alabi', agency: 'ICPC HQ', online: true, lastMsg: 'The audit report is ready.' },
     { id: 2, name: 'Agent Sarah', agency: 'EFCC Zonal', online: false, lastMsg: 'Understood. Will verify.' },
-    { id: 3, name: 'Secure Gateway', agency: 'System', online: true, lastMsg: 'Node synchronization active.' },
+    { id: 3, name: 'Director Musa', agency: 'BPP Procurement', online: true, lastMsg: 'Certificate of No Objection issued.' },
+    { id: 4, name: 'Secure Gateway', agency: 'System', online: true, lastMsg: 'Node synchronization active.' },
 ];
 
 export default function SecureMessaging() {

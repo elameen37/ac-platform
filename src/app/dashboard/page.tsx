@@ -126,7 +126,7 @@ export default function Dashboard() {
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] uppercase font-mono mb-1">
                   <span className="text-foreground/60">Node Connection</span>
-                  <span className="text-emerald-icpc">14/14</span>
+                  <span className="text-emerald-icpc">21/21</span>
                 </div>
                 <div className="h-1 bg-foreground/5 w-full rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-icpc w-[100%]"></div>

@@ -39,11 +39,18 @@ export default function AdminControl() {
                             <span className="text-[10px] font-mono text-emerald-icpc bg-emerald-icpc/5 px-2 py-0.5 rounded-sm border border-emerald-icpc/20 tracking-tighter animate-pulse">Real-time Sync Active</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {[
                                 { name: 'ICPC HQ Node', status: 'Online', load: '12%', ip: '192.168.1.1' },
                                 { name: 'EFCC Zonal Node', status: 'Online', load: '45%', ip: '192.168.4.12' },
                                 { name: 'NFIU Gateway', status: 'Online', load: '8%', ip: '10.0.82.1' },
+                                { name: 'CCB Central', status: 'Online', load: '15%', ip: '172.16.0.5' },
+                                { name: 'CCT Registry', status: 'Online', load: '5%', ip: '172.16.0.12' },
+                                { name: 'BPP Procurement', status: 'Online', load: '28%', ip: '172.20.10.1' },
+                                { name: 'NEITI Audit', status: 'Online', load: '10%', ip: '172.24.5.88' },
+                                { name: 'PCC Complaints', status: 'Online', load: '22%', ip: '172.30.1.44' },
+                                { name: 'OAuGF Forensic', status: 'Online', load: '35%', ip: '10.50.0.1' },
+                                { name: 'TUGAR Analysis', status: 'Online', load: '7%', ip: '10.55.2.14' },
                                 { name: 'Interpol Link', status: 'Offline', load: '0%', ip: '8.8.4.4' },
                             ].map((node) => (
                                 <div key={node.name} className="p-4 bg-foreground/[0.03] border border-border rounded-sm hover:border-emerald-icpc/30 transition-all group">
