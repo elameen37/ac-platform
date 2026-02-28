@@ -14,7 +14,8 @@ import {
   History,
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -34,19 +35,37 @@ const secondaryNavigation = [
   { name: 'Security Settings', href: '/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+  isMobile?: boolean;
+}
+
+export default function Sidebar({ onClose, isMobile }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-full sidebar-surface flex flex-col transition-colors duration-300">
-      <div className="p-6 flex items-center space-x-3 border-b border-border">
-        <div className="w-8 h-8 rounded-sm bg-emerald-icpc flex items-center justify-center">
-          <ShieldCheck className="w-5 h-5 text-white" />
+    <aside className={cn(
+      "w-full lg:w-64 h-full sidebar-surface flex flex-col transition-colors duration-300 relative",
+      isMobile ? "shadow-2xl" : ""
+    )}>
+      <div className="p-6 flex items-center justify-between border-b border-border">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-sm bg-emerald-icpc flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold tracking-tight text-foreground uppercase italic">ICPC</h1>
+            <p className="text-[10px] text-foreground/40 uppercase font-mono">Inter-Agency Ex.</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-sm font-bold tracking-tight text-foreground uppercase italic">ICPC</h1>
-          <p className="text-[10px] text-foreground/40 uppercase font-mono">Inter-Agency Ex.</p>
-        </div>
+        {isMobile && (
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-foreground/5 rounded-sm transition-colors text-foreground/40 hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-8">
@@ -59,6 +78,7 @@ export default function Sidebar() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
+                    onClick={onClose}
                     className={cn(
                       "flex items-center justify-between group px-2 py-2 rounded-sm text-sm transition-all duration-200",
                       isActive
@@ -85,6 +105,7 @@ export default function Sidebar() {
               <li key={item.name}>
                 <Link
                   href={item.href}
+                  onClick={onClose}
                   className="flex items-center px-2 py-2 rounded-sm text-sm text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
                 >
                   <item.icon className="w-4 h-4 mr-3 text-foreground/40" />
