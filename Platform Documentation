@@ -1,0 +1,1034 @@
+# ICPC Inter-Agency Information & Training Exchange Platform
+
+**Technical Documentation v2.0**
+**Classification: OFFICIAL — SENSITIVE**
+**Last Updated: 2026-03-01**
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#1-executive-summary)
+2. [System Architecture](#2-system-architecture)
+3. [Technology Stack](#3-technology-stack)
+4. [Frontend Architecture](#4-frontend-architecture)
+5. [Backend Architecture](#5-backend-architecture)
+6. [Database Schema](#6-database-schema)
+7. [Authentication & Authorization](#7-authentication--authorization)
+8. [API Reference](#8-api-reference)
+9. [Module Documentation](#9-module-documentation)
+10. [Design System](#10-design-system)
+11. [Security Framework](#11-security-framework)
+12. [Deployment & Infrastructure](#12-deployment--infrastructure)
+13. [Testing Strategy](#13-testing-strategy)
+14. [Appendices](#14-appendices)
+
+---
+
+## 1. Executive Summary
+
+The **ICPC Inter-Agency Information & Training Exchange Platform** is a secure, government-grade digital workspace built for Nigeria's anti-corruption ecosystem. It facilitates classified document management, inter-agency intelligence exchange, training coordination, and secure communications between **11 critical agencies**: ICPC, EFCC, NFIU, CCB, CCT, BPP, NEITI, PCC, OAuGF, TUGAR, and Interpol.
+
+### Key Capabilities
+
+| Capability | Description |
+|---|---|
+| **Executive Dashboard** | Real-time operational metrics and inter-agency activity streams |
+| **Classified Document Mgmt** | Tiered document access with watermarking and audit trails |
+| **Secure Messaging** | End-to-end encrypted inter-agency communication |
+| **Training Exchange** | Cross-agency training nomination and capacity building |
+| **Admin Control** | Node management, policy enforcement, and platform governance |
+| **Audit Logging** | Immutable, blockchain-anchored event stream |
+| **Notification Engine** | Priority-classified intelligence alerts |
+
+---
+
+## 2. System Architecture
+
+### High-Level Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        A["Next.js 16 SPA<br/>React 19 + TailwindCSS 4"]
+    end
+
+    subgraph "API Gateway"
+        B["Kong API Gateway<br/>Rate Limiting / IP Whitelist"]
+    end
+
+    subgraph "Backend Services"
+        C["Auth Service<br/>Node.js + Passport"]
+        D["Document Service<br/>Node.js + Multer"]
+        E["Messaging Service<br/>Node.js + Socket.IO"]
+        F["Training Service<br/>Node.js + Express"]
+        G["Audit Service<br/>Node.js + Append-Only"]
+        H["Notification Service<br/>Node.js + SSE"]
+        I["Admin Service<br/>Node.js + Express"]
+    end
+
+    subgraph "Data Layer"
+        J["PostgreSQL 16<br/>Primary DB"]
+        K["Redis 7<br/>Sessions + Cache"]
+        L["MinIO / S3<br/>Document Storage"]
+        M["Elasticsearch 8<br/>Full-Text Search"]
+    end
+
+    subgraph "Infrastructure"
+        N["Vercel Edge Network<br/>CDN + SSR"]
+        O["Docker Swarm<br/>Service Orchestration"]
+        P["HashiCorp Vault<br/>Secrets Management"]
+    end
+
+    A --> B
+    B --> C & D & E & F & G & H & I
+    C --> J & K
+    D --> J & L & M
+    E --> J & K
+    F --> J
+    G --> J
+    H --> K
+    I --> J
+    A --> N
+    C & D & E & F & G & H & I --> O
+    O --> P
+```
+
+### Service Communication
+
+| Pattern | Usage |
+|---|---|
+| REST (HTTPS) | All CRUD operations and data queries |
+| WebSocket (WSS) | Secure Messaging real-time delivery |
+| Server-Sent Events (SSE) | Notification push to connected clients |
+| gRPC | Inter-service communication within backend |
+
+---
+
+## 3. Technology Stack
+
+### Frontend
+
+| Technology | Version | Purpose |
+|---|---|---|
+| Next.js | 16.1.6 | React framework with SSR/SSG |
+| React | 19.2.3 | UI component library |
+| TailwindCSS | 4.x | Utility-first CSS framework |
+| Framer Motion | 12.34.3 | Animation and transitions |
+| Lucide React | 0.575.0 | Iconography system |
+| next-themes | 0.4.6 | Dark/light theme management |
+| Zustand | 5.0.11 | Lightweight state management |
+| clsx + tailwind-merge | Latest | Conditional class name management |
+
+### Backend
+
+| Technology | Version | Purpose |
+|---|---|---|
+| Node.js | 20 LTS | Runtime environment |
+| Express.js | 5.x | HTTP framework |
+| Passport.js | 0.7 | Authentication strategies |
+| Socket.IO | 4.x | WebSocket abstraction for messaging |
+| Prisma | 6.x | ORM and database migrations |
+| Zod | 3.x | Request/response schema validation |
+| Bull MQ | 5.x | Job queue for async tasks |
+| Winston | 3.x | Structured logging |
+
+### Infrastructure
+
+| Technology | Purpose |
+|---|---|
+| PostgreSQL 16 | Primary relational database |
+| Redis 7 | Session store, caching, pub/sub |
+| MinIO | S3-compatible document object storage |
+| Elasticsearch 8 | Full-text search and log aggregation |
+| Docker + Docker Compose | Containerization and local dev |
+| Vercel | Frontend hosting and edge functions |
+| GitHub Actions | CI/CD pipelines |
+| HashiCorp Vault | Secret and key management |
+
+---
+
+## 4. Frontend Architecture
+
+### Project Structure
+
+```
+src/
+├── app/                          # Next.js App Router pages
+│   ├── layout.tsx                # Root layout with ThemeProvider + AppShell
+│   ├── page.tsx                  # Login page + Security Briefing modal
+│   ├── globals.css               # Design tokens + custom utilities
+│   ├── dashboard/page.tsx        # Executive Oversight Dashboard
+│   ├── documents/page.tsx        # Classified Document Explorer
+│   ├── repository/page.tsx       # Knowledge Repository (DocumentViewer)
+│   ├── messaging/page.tsx        # Secure Messaging Interface
+│   ├── training/page.tsx         # Training & Capacity Exchange
+│   ├── admin/page.tsx            # Admin Control Panel
+│   ├── audit/page.tsx            # Activity & Audit Logs
+│   ├── notifications/page.tsx    # Notification Center
+│   └── settings/page.tsx         # User Security Settings
+├── components/
+│   ├── layout/
+│   │   ├── AppShell.tsx          # Root layout shell (header + sidebar + content)
+│   │   └── Sidebar.tsx           # Navigation sidebar with role-based links
+│   ├── modules/
+│   │   └── DocumentViewer.tsx    # Classified document viewer with watermarking
+│   ├── providers/
+│   │   └── ThemeProvider.tsx     # Dark/light theme context provider
+│   └── ui/
+│       └── ThemeToggle.tsx       # Theme toggle switch component
+└── lib/
+    └── utils.ts                  # Utility functions (cn class merger)
+```
+
+### Routing Overview
+
+| Route | Page Component | Access Level | Description |
+|---|---|---|---|
+| `/` | `LoginPage` | Public | Authentication + Security Briefing |
+| `/dashboard` | `Dashboard` | Executive+ | Operational metrics overview |
+| `/repository` | `DocumentViewer` | User+ | Knowledge base and document viewer |
+| `/documents` | `DocumentExplorer` | Specialist+ | Classified document management |
+| `/training` | `TrainingPortal` | User+ | Course catalog and nominations |
+| `/messaging` | `SecureMessaging` | User+ | Encrypted inter-agency chat |
+| `/admin` | `AdminControl` | Admin | Node management and policies |
+| `/audit` | `AuditLogs` | Admin | Immutable activity event stream |
+| `/notifications` | `Notifications` | User+ | Intelligence alerts center |
+| `/settings` | `SecuritySettings` | User+ | MFA, sessions, and credentials |
+
+### Component Architecture
+
+```mermaid
+graph TD
+    RootLayout["RootLayout<br/>(layout.tsx)"] --> ThemeProvider
+    ThemeProvider --> AppShell
+
+    AppShell --> Sidebar["Sidebar<br/>(Desktop + Mobile Drawer)"]
+    AppShell --> Header["Header Bar<br/>(Node Status + Time)"]
+    AppShell --> Content["Page Content<br/>(Dynamic Route)"]
+
+    Sidebar --> NavLinks["Navigation Links<br/>(Role-Filtered)"]
+    Sidebar --> ThemeToggle["ThemeToggle<br/>(Dark/Light)"]
+    Sidebar --> UserProfile["User Profile Card"]
+
+    Content --> Dashboard
+    Content --> DocumentViewer
+    Content --> DocumentExplorer
+    Content --> SecureMessaging
+    Content --> TrainingPortal
+    Content --> AdminControl
+    Content --> AuditLogs
+    Content --> Notifications
+    Content --> SecuritySettings
+```
+
+### State Management
+
+| Store | Library | Purpose |
+|---|---|---|
+| Theme | `next-themes` | Global dark/light mode preference |
+| Auth Session | Zustand | Current user, tokens, role |
+| Sidebar | React `useState` | Mobile drawer open/close state |
+| Messaging | Zustand + Socket.IO | Active contact, message threads, typing indicators |
+| Notifications | Zustand + SSE | Unread count, real-time alert queue |
+| Document Viewer | React `useState` | Metadata toggle, classification display, zoom |
+
+### Responsive Design
+
+The platform implements a **mobile-first** responsive strategy:
+
+| Breakpoint | Width | Layout Behavior |
+|---|---|---|
+| **Mobile** | < 640px | Single column, drawer navigation, card-based lists |
+| **Tablet** | 640px – 1023px | Two-column grids, collapsible panels |
+| **Desktop** | ≥ 1024px | Full sidebar, multi-column dashboards, table views |
+
+---
+
+## 5. Backend Architecture
+
+### Service Decomposition
+
+```mermaid
+graph LR
+    subgraph "Auth Domain"
+        AuthSvc["Auth Service<br/>POST /auth/login<br/>POST /auth/logout<br/>POST /auth/refresh<br/>POST /auth/mfa/verify"]
+    end
+
+    subgraph "Resource Domain"
+        DocSvc["Document Service<br/>CRUD /documents<br/>GET /documents/:id/download<br/>POST /documents/search"]
+        TrainSvc["Training Service<br/>CRUD /courses<br/>POST /nominations<br/>GET /nominations/:id/status"]
+    end
+
+    subgraph "Communication Domain"
+        MsgSvc["Messaging Service<br/>WebSocket /ws/messaging<br/>GET /threads<br/>POST /threads/:id/messages"]
+        NotifSvc["Notification Service<br/>SSE /notifications/stream<br/>GET /notifications<br/>PATCH /notifications/:id/read"]
+    end
+
+    subgraph "Governance Domain"
+        AdminSvc["Admin Service<br/>CRUD /nodes<br/>CRUD /policies<br/>POST /lockdown"]
+        AuditSvc["Audit Service<br/>GET /audit-logs<br/>GET /audit-logs/export<br/>GET /audit-logs/integrity"]
+    end
+```
+
+### Service Specifications
+
+#### Auth Service
+
+- **Port:** 4001
+- **Responsibilities:** User authentication, JWT issuance/refresh, MFA enrollment, session management
+- **Auth Flow:** Username/password → MFA challenge → JWT (access + refresh) → Redis session
+- **Integration:** LDAP/Active Directory bridge for agency staff directories
+
+#### Document Service
+
+- **Port:** 4002
+- **Responsibilities:** Document CRUD, classification tagging, version control, watermarked preview generation
+- **Storage:** MinIO for encrypted file blobs; PostgreSQL for metadata
+- **Search:** Elasticsearch for full-text content indexing
+- **Classification Levels:** `PUBLIC`, `RESTRICTED`, `SECRET`, `TOP_SECRET`
+
+#### Messaging Service
+
+- **Port:** 4003
+- **Responsibilities:** Real-time encrypted messaging, thread management, file attachment handling
+- **Protocol:** WebSocket (Socket.IO) with AES-256-GCM encrypted payloads
+- **Queuing:** RabbitMQ for message delivery guarantees
+
+#### Training Service
+
+- **Port:** 4004
+- **Responsibilities:** Course catalog management, nomination workflows, clearance verification
+- **Workflow:** Nomination → Clearance Check → Supervisor Approval → Enrollment Confirmation
+
+#### Admin Service
+
+- **Port:** 4005
+- **Responsibilities:** Agency node registration, policy configuration, platform lockdown
+- **Features:** Real-time node health monitoring via heartbeat, role management, cross-agency sync control
+
+#### Audit Service
+
+- **Port:** 4006
+- **Responsibilities:** Immutable event logging, tamper detection, compliance reporting
+- **Integrity:** Each log entry is chained via SHA-256 hash, creating a blockchain-like audit trail
+- **Export:** CSV, PDF, and legally-formatted report generation
+
+#### Notification Service
+
+- **Port:** 4007
+- **Responsibilities:** Multi-channel alert delivery (in-app SSE, email, SMS), priority routing
+- **Priority Levels:** `INFO`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+---
+
+## 6. Database Schema
+
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ SESSIONS : has
+    USERS ||--o{ AUDIT_LOGS : generates
+    USERS ||--o{ NOMINATIONS : submits
+    USERS ||--o{ MESSAGES : sends
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS }|--|| AGENCIES : belongs_to
+    USERS }|--|| ROLES : has
+
+    AGENCIES ||--o{ NODES : operates
+    AGENCIES ||--o{ DOCUMENTS : owns
+
+    DOCUMENTS ||--o{ DOCUMENT_VERSIONS : has
+    DOCUMENTS }|--|| CLASSIFICATION_LEVELS : classified_as
+
+    COURSES ||--o{ NOMINATIONS : receives
+    COURSES }|--|| AGENCIES : hosted_by
+
+    THREADS ||--o{ MESSAGES : contains
+    THREADS ||--o{ THREAD_PARTICIPANTS : has
+
+    POLICIES ||--o{ POLICY_ASSIGNMENTS : applied_to
+
+    USERS {
+        uuid id PK
+        string staff_id UK
+        string full_name
+        string email UK
+        string password_hash
+        string mfa_secret
+        uuid agency_id FK
+        uuid role_id FK
+        enum status "ACTIVE, SUSPENDED, LOCKED"
+        int clearance_level
+        timestamp created_at
+        timestamp last_login
+    }
+
+    AGENCIES {
+        uuid id PK
+        string code UK "ICPC, EFCC, CCB..."
+        string full_name
+        string ip_range
+        enum status "ONLINE, OFFLINE, MAINTENANCE"
+        float current_load
+        timestamp last_sync
+    }
+
+    ROLES {
+        uuid id PK
+        string name UK "Admin, Executive, Specialist, User"
+        jsonb permissions
+    }
+
+    DOCUMENTS {
+        uuid id PK
+        string reference_number UK
+        string title
+        text content_summary
+        uuid classification_id FK
+        uuid agency_id FK
+        uuid uploaded_by FK
+        string storage_key
+        string content_hash
+        boolean is_watermarked
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    COURSES {
+        uuid id PK
+        string title
+        string description
+        uuid hosting_agency_id FK
+        enum location_type "PHYSICAL, VIRTUAL, HYBRID"
+        string location_detail
+        string duration
+        enum status "OPEN, CLOSING_SOON, CLOSED"
+        int max_nominations
+        timestamp start_date
+        timestamp end_date
+    }
+
+    NOMINATIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid course_id FK
+        uuid nominated_by FK
+        enum status "PENDING, CLEARANCE_CHECK, APPROVED, REJECTED"
+        text justification
+        timestamp created_at
+    }
+
+    THREADS {
+        uuid id PK
+        string subject
+        enum encryption_type "E2EE, TLS"
+        timestamp created_at
+    }
+
+    MESSAGES {
+        uuid id PK
+        uuid thread_id FK
+        uuid sender_id FK
+        text encrypted_content
+        string iv
+        enum type "TEXT, FILE, SYSTEM"
+        timestamp sent_at
+        boolean is_read
+    }
+
+    AUDIT_LOGS {
+        uuid id PK
+        string log_id UK "LOG-XXXX"
+        uuid user_id FK
+        string action
+        string resource
+        string agency_context
+        enum severity "INFO, LOW, MEDIUM, HIGH, CRITICAL"
+        string previous_hash
+        string entry_hash
+        jsonb metadata
+        timestamp created_at
+    }
+
+    NODES {
+        uuid id PK
+        string name
+        uuid agency_id FK
+        string ip_address
+        enum status "ONLINE, OFFLINE"
+        float load_percentage
+        timestamp last_heartbeat
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        enum type "SECURITY, ACCESS, SYSTEM, WORKFLOW"
+        string title
+        text description
+        enum priority "INFO, LOW, MEDIUM, HIGH, CRITICAL"
+        boolean is_read
+        timestamp created_at
+    }
+
+    POLICIES {
+        uuid id PK
+        string name
+        string description
+        jsonb configuration
+        enum status "ENFORCED, MONITORING, DISABLED"
+        timestamp updated_at
+    }
+```
+
+---
+
+## 7. Authentication & Authorization
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant GW as API Gateway
+    participant AS as Auth Service
+    participant DB as PostgreSQL
+    participant RD as Redis
+
+    U->>FE: Opens platform (/)
+    FE->>U: Display Security Briefing
+    U->>FE: Acknowledge & Proceed
+    FE->>U: Show Login Form
+    U->>FE: Enter credentials
+    FE->>GW: POST /auth/login
+    GW->>AS: Forward (rate-limited)
+    AS->>DB: Validate credentials
+    DB-->>AS: User record
+    AS->>AS: Verify bcrypt hash
+    AS->>U: MFA Challenge (TOTP)
+    U->>FE: Enter TOTP code
+    FE->>GW: POST /auth/mfa/verify
+    GW->>AS: Forward
+    AS->>AS: Verify TOTP
+    AS->>RD: Store session
+    AS-->>FE: JWT (access_token + refresh_token)
+    FE->>FE: Store tokens, redirect to /dashboard
+```
+
+### Role-Based Access Control (RBAC)
+
+| Role | Level | Accessible Modules |
+|---|---|---|
+| **User** | 1 | Repository, Training, Messaging, Notifications, Settings |
+| **Specialist** | 2 | + Classified Documents |
+| **Executive** | 3 | + Executive Dashboard |
+| **Admin** | 4 | + Admin Control, Audit Logs |
+| **Super Admin** | 5 | + Platform Lockdown, Policy Override |
+
+### Security Policies
+
+| Policy | Configuration |
+|---|---|
+| Password | Min 14 chars, uppercase, lowercase, number, special char |
+| MFA | Mandatory TOTP (Google Authenticator / YubiKey) |
+| Session Timeout | 15 minutes of inactivity |
+| Token Expiry | Access: 15 min, Refresh: 7 days (rotated) |
+| IP Whitelist | Agency-specific IP range enforcement |
+| Brute Force | Account lockout after 5 failed attempts (30 min) |
+| Password Rotation | Every 90 days, enforced globally |
+
+---
+
+## 8. API Reference
+
+### Base URL
+
+```
+Production:  https://api.icpc-platform.gov.ng/v1
+Staging:     https://api-staging.icpc-platform.gov.ng/v1
+```
+
+### Common Headers
+
+```http
+Authorization: Bearer <access_token>
+X-Agency-Code: ICPC
+X-Request-ID: <uuid>
+Content-Type: application/json
+```
+
+### Endpoints
+
+#### Authentication
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `POST` | `/auth/login` | Authenticate with credentials | Public |
+| `POST` | `/auth/mfa/verify` | Verify MFA TOTP code | Public |
+| `POST` | `/auth/refresh` | Refresh access token | Refresh Token |
+| `POST` | `/auth/logout` | Invalidate session | Bearer |
+| `GET` | `/auth/me` | Get current user profile | Bearer |
+
+#### Documents
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/documents` | List documents (paginated, filtered) | Bearer |
+| `GET` | `/documents/:id` | Get document metadata | Bearer |
+| `GET` | `/documents/:id/download` | Download classified document | Bearer + Clearance |
+| `POST` | `/documents` | Upload new document | Bearer + Specialist |
+| `PUT` | `/documents/:id` | Update document metadata | Bearer + Owner |
+| `DELETE` | `/documents/:id` | Soft-delete document | Bearer + Admin |
+| `POST` | `/documents/search` | Full-text search | Bearer |
+
+#### Messaging
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/threads` | List message threads | Bearer |
+| `GET` | `/threads/:id/messages` | Get thread messages (paginated) | Bearer + Participant |
+| `POST` | `/threads` | Create new thread | Bearer |
+| `POST` | `/threads/:id/messages` | Send encrypted message | Bearer + Participant |
+| `WS` | `/ws/messaging` | Real-time message stream | Bearer |
+
+#### Training
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/courses` | List available courses | Bearer |
+| `GET` | `/courses/:id` | Get course details + syllabus | Bearer |
+| `POST` | `/nominations` | Submit training nomination | Bearer |
+| `GET` | `/nominations` | List nominations (filtered) | Bearer |
+| `PATCH` | `/nominations/:id` | Approve/reject nomination | Bearer + Executive |
+
+#### Admin
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/nodes` | List all agency nodes | Bearer + Admin |
+| `POST` | `/nodes` | Register new agency node | Bearer + Super Admin |
+| `PUT` | `/nodes/:id` | Update node configuration | Bearer + Admin |
+| `GET` | `/policies` | List platform policies | Bearer + Admin |
+| `PUT` | `/policies/:id` | Update policy configuration | Bearer + Super Admin |
+| `POST` | `/lockdown` | Execute platform lockdown | Bearer + Super Admin |
+
+#### Audit
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/audit-logs` | Query audit logs (paginated) | Bearer + Admin |
+| `GET` | `/audit-logs/export` | Export as CSV/PDF | Bearer + Admin |
+| `GET` | `/audit-logs/integrity` | Verify chain integrity | Bearer + Admin |
+
+#### Notifications
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `GET` | `/notifications` | List notifications (paginated) | Bearer |
+| `PATCH` | `/notifications/:id/read` | Mark as read | Bearer |
+| `PATCH` | `/notifications/read-all` | Mark all as read | Bearer |
+| `GET` | `/notifications/stream` | SSE real-time stream | Bearer |
+
+### Standard Response Format
+
+```json
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "page": 1,
+    "perPage": 25,
+    "total": 142,
+    "totalPages": 6
+  },
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Error Response Format
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid or expired authentication token.",
+    "details": []
+  },
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+---
+
+## 9. Module Documentation
+
+### 9.1 Login & Security Briefing
+
+**File:** [page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/page.tsx)
+
+The platform entry point presents a mandatory **Institutional Security Briefing** before exposing the login form. This ensures every operator acknowledges data handling obligations under the Official Secrets Act.
+
+**Flow:**  
+
+1. User lands on `/` → Security Briefing modal animates in  
+2. User reads protocols → clicks "Acknowledge & Proceed"  
+3. Login form fades in → user enters Staff ID + passphrase  
+4. System verifies credentials → MFA challenge  
+5. Redirect to `/dashboard`  
+
+**Key Features:**
+
+- Framer Motion `AnimatePresence` for premium transitions
+- Scanning line animation to reinforce high-security aesthetic
+- Glassmorphism modal with `authority-gold` border accents
+
+---
+
+### 9.2 Executive Oversight Dashboard
+
+**File:** [dashboard/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/dashboard/page.tsx)
+
+Provides a consolidated operational picture for senior leadership.
+
+**Displays:**
+
+- **4 KPI Cards**: Active Investigations (1,284), Completed Audits (452), Training Nominees (89), Open Petitions (312)
+- **Inter-Agency Activity Feed**: Real-time stream of cross-agency events with status indicators
+- **System Compliance Panel**: Global health (98.2%), data integrity verification, 21/21 node connection status
+
+**Data Sources:** `GET /dashboard/stats`, `GET /dashboard/activity`, `GET /dashboard/compliance`
+
+---
+
+### 9.3 Knowledge Repository
+
+**Files:** [repository/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/repository/page.tsx) → [DocumentViewer.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/components/modules/DocumentViewer.tsx)
+
+A secure document reader with built-in watermarking and classification overlays.
+
+**Features:**
+
+- Watermarked document display with `ICPC CLASSIFIED` diagonal grid
+- Collapsible metadata sidebar (author, classification, version history)
+- Toggle between classified and declassified views
+- Mobile-optimized with `showMeta` state toggle
+
+---
+
+### 9.4 Classified Document Explorer
+
+**File:** [documents/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/documents/page.tsx)
+
+Browse, filter, and manage classified documents across agency boundaries.
+
+**Features:**
+
+- Category-based folder navigation (Investigation, Audit, Training, Policy)
+- Desktop table view + mobile card view
+- Security classification tags (`SECRET`, `RESTRICTED`, `PUBLIC`)
+- Advanced search with full-text Elasticsearch integration
+
+---
+
+### 9.5 Secure Messaging
+
+**File:** [messaging/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/messaging/page.tsx)
+
+End-to-end encrypted messaging between authorized agents across agencies.
+
+**Features:**
+
+- Contact list with online/offline indicators
+- AES-256-GCM encrypted message payloads
+- Classified attachment sharing with decryption flow
+- Session initialization timestamps
+- Mobile-first responsive with toggleable contact drawer
+
+**Contacts:** Director Alabi (ICPC HQ), Agent Sarah (EFCC Zonal), Director Musa (BPP Procurement), Secure Gateway (System)
+
+---
+
+### 9.6 Training & Capacity Exchange
+
+**File:** [training/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/training/page.tsx)
+
+Cross-agency training catalog and nomination management.
+
+**Features:**
+
+- Course catalog with location type, duration, and enrollment status
+- 3-step nomination wizard: Select Agent → Clearance Validation → Authorization
+- Preview syllabus and nominee tracking
+- Animated step transitions with Framer Motion
+
+---
+
+### 9.7 Admin Control Panel
+
+**File:** [admin/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/admin/page.tsx)
+
+Platform governance hub for system administrators.
+
+**Active Agency Nodes (11):**
+
+| Node | Status | Load | IP |
+|---|---|---|---|
+| ICPC HQ Node | Online | 12% | 192.168.1.1 |
+| EFCC Zonal Node | Online | 45% | 192.168.4.12 |
+| NFIU Gateway | Online | 8% | 10.0.82.1 |
+| CCB Central | Online | 15% | 172.16.0.5 |
+| CCT Registry | Online | 5% | 172.16.0.12 |
+| BPP Procurement | Online | 28% | 172.20.10.1 |
+| NEITI Audit | Online | 10% | 172.24.5.88 |
+| PCC Complaints | Online | 22% | 172.30.1.44 |
+| OAuGF Forensic | Online | 35% | 10.50.0.1 |
+| TUGAR Analysis | Online | 7% | 10.55.2.14 |
+| Interpol Link | Offline | 0% | 8.8.4.4 |
+
+**Platform Policies:** MFA (Enforced), Inactivity Timeout (15 min), Data Encryption (AES-256), Cross-Agency Sync (Enabled)
+
+**Crisis Protection:** One-click platform lockdown terminating all active sessions.
+
+---
+
+### 9.8 Activity & Audit Logs
+
+**File:** [audit/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/audit/page.tsx)
+
+Immutable event stream with blockchain-anchored integrity verification.
+
+**Features:**
+
+- Filterable log table (Agency, Severity, Date Range)
+- Severity indicators: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`
+- Blockchain integrity hash display (current head)
+- Export to Secure CSV and Legal Report formats
+- Tamper-verified status indicator
+- Paginated with 42 pages of historical data
+
+---
+
+### 9.9 Notification Center
+
+**File:** [notifications/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/notifications/page.tsx)
+
+Centralized intelligence alerts and system notifications.
+
+**Notification Types:** Security, Access, System, Workflow  
+**Priority Levels:** High (red), Medium (gold), Low (emerald)  
+**Features:** Mark all as read, review/dismiss actions, archive loading
+
+---
+
+### 9.10 User Security Settings
+
+**File:** [settings/page.tsx](file:///c:/Users/HP/Documents/CRAFTWAVE/projects/ac-platform/src/app/settings/page.tsx)
+
+Personal security configuration panel.
+
+**Sections:**
+
+- **Authentication**: MFA management, biometric key registration (YubiKey 5C)
+- **Device Management**: View and terminate active login nodes
+- **Access History**: Session audit trail
+- **Global Privacy**: Data sharing preferences
+- **Credential Recovery**: Requires physical appearance at ICPC ICT Directorate
+
+---
+
+## 10. Design System
+
+### Color Tokens
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--pitch-black` | `#0A0A0A` | Dark mode background |
+| `--emerald-icpc` | `#008450` | Primary brand, success states, active indicators |
+| `--authority-gold` | `#D4AF37` | Warning states, restricted classifications, accent borders |
+| `--restricted-red` | `#B22222` | Error states, critical alerts, secret classifications |
+
+### Theme Variables
+
+| Variable | Light | Dark |
+|---|---|---|
+| `--background` | `#FFFFFF` | `#0A0A0A` |
+| `--foreground` | `#1A1A1A` | `#F8F8F8` |
+| `--border` | `rgba(0,0,0,0.1)` | `rgba(255,255,255,0.1)` |
+| `--glass` | `rgba(0,0,0,0.02)` | `rgba(255,255,255,0.03)` |
+
+### Typography
+
+| Font | Variable | Usage |
+|---|---|---|
+| Inter | `--font-sans` | Primary UI text |
+| Public Sans | `--font-sans` | Alternative body text |
+| JetBrains Mono | `--font-mono` | Monospace labels, IDs, timestamps |
+
+### Custom Utilities
+
+| Class | Effect |
+|---|---|
+| `.glass-effect` | Glassmorphism: translucent bg + backdrop blur + border |
+| `.emerald-glow` | Emerald box-shadow on hover |
+| `.gold-border` | Left gold accent border |
+| `.security-tag` | Monospace classification badge |
+| `.tag-secret` / `.tag-restricted` / `.tag-public` | Security level color schemes |
+| `.nav-item-active` / `.nav-item-hover` | Sidebar navigation states |
+
+---
+
+## 11. Security Framework
+
+### Data Protection
+
+| Layer | Implementation |
+|---|---|
+| **Transport** | TLS 1.3 for all HTTP/WS connections |
+| **At Rest** | AES-256-GCM encryption for stored documents |
+| **In Transit** | End-to-end encryption for messaging payloads |
+| **Database** | Column-level encryption for PII fields |
+| **Secrets** | HashiCorp Vault with auto-rotation |
+
+### Compliance
+
+| Standard | Status |
+|---|---|
+| NDPR (Nigeria Data Protection Regulation) | ✅ Compliant |
+| Official Secrets Act | ✅ Enforced via Security Briefing |
+| ISO 27001 | ✅ Information Security Management |
+| NIST 800-53 | ✅ Security Controls Baseline |
+
+### Security Headers
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self'
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+```
+
+---
+
+## 12. Deployment & Infrastructure
+
+### Environment Configuration
+
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/icpc` |
+| `REDIS_URL` | Redis connection string | `redis://host:6379` |
+| `MINIO_ENDPOINT` | Object storage endpoint | `minio.internal:9000` |
+| `JWT_SECRET` | Access token signing key | Vault-managed |
+| `JWT_REFRESH_SECRET` | Refresh token signing key | Vault-managed |
+| `MFA_ISSUER` | TOTP issuer label | `ICPC-Platform` |
+| `ELASTICSEARCH_URL` | Search engine endpoint | `http://es:9200` |
+| `NEXT_PUBLIC_API_URL` | Frontend API base URL | `https://api.icpc-platform.gov.ng/v1` |
+
+### CI/CD Pipeline
+
+```mermaid
+graph LR
+    A["Push to main"] --> B["GitHub Actions"]
+    B --> C["Lint + Type Check"]
+    C --> D["Unit Tests"]
+    D --> E["Integration Tests"]
+    E --> F["Build"]
+    F --> G{"Branch?"}
+    G -->|main| H["Deploy to Production<br/>(Vercel)"]
+    G -->|develop| I["Deploy to Staging<br/>(Vercel Preview)"]
+    H --> J["Post-Deploy Health Check"]
+    I --> J
+```
+
+### Deployment Commands
+
+```bash
+# Development
+npm run dev                    # Start Next.js dev server (port 3000)
+
+# Production Build
+npm run build                  # Create optimized production bundle
+npm run start                  # Start production server
+
+# Docker (Backend Services)
+docker-compose up -d           # Start all backend services
+docker-compose logs -f auth    # Tail auth service logs
+
+# Database
+npx prisma migrate deploy     # Apply pending migrations
+npx prisma db seed             # Seed initial data
+```
+
+---
+
+## 13. Testing Strategy
+
+### Testing Pyramid
+
+| Level | Framework | Coverage Target | Scope |
+|---|---|---|---|
+| **Unit** | Jest + React Testing Library | 80%+ | Components, utilities, hooks |
+| **Integration** | Jest + Supertest | 70%+ | API endpoints, service interactions |
+| **E2E** | Playwright | Critical paths | Login → Dashboard → Document → Messaging |
+| **Security** | OWASP ZAP + Custom | All endpoints | Penetration testing, injection, XSS |
+| **Performance** | k6 | P95 < 200ms | Load testing under 1000 concurrent users |
+
+### Key Test Scenarios
+
+1. **Authentication**: Login, MFA verification, session expiry, brute force lockout
+2. **Authorization**: Role-based page access, document clearance verification
+3. **Document Security**: Watermark generation, classification enforcement, download audit
+4. **Messaging Encryption**: E2EE payload integrity, attachment decryption
+5. **Audit Integrity**: Hash chain verification, tamper detection
+6. **Node Management**: Health check, sync verification, lockdown execution
+
+---
+
+## 14. Appendices
+
+### A. Agency Registry
+
+| Code | Full Name | Type |
+|---|---|---|
+| ICPC | Independent Corrupt Practices and Other Related Offences Commission | Lead Agency |
+| EFCC | Economic and Financial Crimes Commission | Enforcement |
+| NFIU | Nigerian Financial Intelligence Unit | Intelligence |
+| CCB | Code of Conduct Bureau | Compliance |
+| CCT | Code of Conduct Tribunal | Judicial |
+| BPP | Bureau of Public Procurement | Procurement |
+| NEITI | Nigeria Extractive Industries Transparency Initiative | Transparency |
+| PCC | Public Complaints Commission | Complaints |
+| OAuGF | Office of the Auditor General for the Federation | Audit |
+| TUGAR | Technical Unit on Governance and Anti-Corruption Reforms | Reform |
+
+### B. Glossary
+
+| Term | Definition |
+|---|---|
+| **E2EE** | End-to-End Encryption |
+| **MFA** | Multi-Factor Authentication |
+| **TOTP** | Time-based One-Time Password |
+| **RBAC** | Role-Based Access Control |
+| **SLA** | Service Level Agreement |
+| **SSE** | Server-Sent Events |
+| **JWT** | JSON Web Token |
+
+### C. Contact
+
+| Role | Name | Email |
+|---|---|---|
+| Platform Lead | ICPC ICT Directorate | <ict@icpc.gov.ng> |
+| Development | CraftWave Engineering | <dev@craftwave.ng> |
+| Security | ICPC Cybersecurity Unit | <csirt@icpc.gov.ng> |
+
+---
+
+> **Document Classification:** OFFICIAL — SENSITIVE
+> **Distribution:** Authorized platform stakeholders only
+> **Version:** 2.0 | **Date:** 2026-03-01
