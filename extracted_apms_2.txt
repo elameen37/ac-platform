@@ -1,0 +1,29 @@
+Extracted Domain Strings:
+
+=== CONTRACT ===
+Contract Management | Contractor verification
+
+=== PROCUREMENT ===
+procurement | Procurement | Procurement Planning
+
+=== REPORT ===
+Reports Center | Systems Study Reports | Institutional Reporting | reports | Reports | integrity_reports | Integrity Report | Reporting Period: | Investigation Cases Report | Report Type | Prosecutions Report | Personnel Report | Prevention Programs Report | Staff Appraisal Scorecards Report | Unit Performance Report | ICPC APMS Comprehensive Report | PDF report generated successfully | Export Report | Comprehensive Report | Official formatted report | Integrity Reports | Asset Recovery Progress Report | Report scheduled successfully | Schedule Report | Schedule Automated Report | All Reports | Report Filters | Generate Performance Report | Create Custom Report | Recent Reports
+
+=== DASHBOARD ===
+LayoutDashboard | /dashboard | Enter Dashboard | Access Dashboard | Outreach Coverage Dashboard | Dashboard | Sign in to access ICPC APMS Dashboard | Register to access ICPC APMS Dashboard | Back to Dashboard
+
+=== USER ===
+UserCheck | UserCog | UserPlus | UsersRound | Users | useRevalidator | useRouteError | useRouteLoaderData | useRouteId | Auth session or user missing | __isUserNotAvailableProxy | __isInsecureUserWarningProxy | User verification was required during automatic registration but it could not be performed | ERROR_AUTO_REGISTER_USER_VERIFICATION_FAILURE | User verification was required but no available authenticator supported it | ERROR_AUTHENTICATOR_MISSING_USER_VERIFICATION_SUPPORT | User ID was not between 1 and 64 characters | ERROR_INVALID_USER_ID_LENGTH | USER_UPDATED | Error getting user data: | user_id | user_roles | userSelect
+
+=== ADMIN ===
+admin | Systems admin | Administrator | administration | Administration | General Administration | Systems Administration | Admin
+
+=== PROJECT ===
+Special Projects | Active Projects |  Project Register | All projects with current status and progress | Project | Manage and track special enforcement projects across all units
+
+=== AUDIT ===
+Audit trails | Internal Audit | Financial Audit | Performance Audit | Fund disbursement audit
+
+=== TENDER ===
+
+

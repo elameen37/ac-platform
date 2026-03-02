@@ -1,0 +1,21 @@
+
+Routes:
+/
+/login
+/register
+/unauthorized
+/dashboard
+*
+
+Keywords Found:
+login
+dashboard
+admin
+user
+project
+contract
+procurement
+report
+
+Sample Strings:
+typeof window | typeof Promise | ICPC | Independent Corrupt Practices Commission | OFFICIAL DOCUMENT
